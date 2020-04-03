@@ -1,7 +1,7 @@
 from torch.utils import data
 
 
-class BaseDataset(data.Dataset):
+class DatasetTemplate(data.Dataset):
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
 
