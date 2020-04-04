@@ -7,7 +7,8 @@ import numpy as np
 import os
 from datetime import datetime
 
-from loggers.tsboard import TensorboardHelper
+from loggers import TensorboardLogger
+from utils.device import move_to, detach
 
 
 class Trainer():
@@ -46,7 +47,7 @@ class Trainer():
 
         # Instantiate loggers
         self.save_dir = os.path.join('runs', self.train_id)
-        self.tsboard = TensorboardHelper(path=self.save_dir)
+        self.tsboard = TensorboardLogger(path=self.save_dir)
 
     def save_checkpoint(self, epoch, val_loss, val_metric):
 
@@ -91,8 +92,8 @@ class Trainer():
         progress_bar = tqdm(dataloader)
         for i, (inp, lbl) in enumerate(progress_bar):
             # 1: Load img_inputs and labels
-            inp = inp.to(self.device)
-            lbl = lbl.to(self.device)
+            inp = move_to(inp, self.device)
+            lbl = move_to(lbl, self.device)
             # 2: Clear gradients from previous iteration
             self.optimizer.zero_grad()
             # 3: Get network outputs
@@ -114,8 +115,8 @@ class Trainer():
                     running_loss.reset()
 
                 # 8: Update metric
-                outs = outs.detach()
-                lbl = lbl.detach()
+                outs = detach(outs)
+                lbl = detach(lbl)
                 for m in self.metric.values():
                     value = m.calculate(outs, lbl)
                     m.update(value)
@@ -137,8 +138,8 @@ class Trainer():
         progress_bar = tqdm(dataloader)
         for i, (inp, lbl) in enumerate(progress_bar):
             # 1: Load inputs and labels
-            inp = inp.to(self.device)
-            lbl = lbl.to(self.device)
+            inp = move_to(inp, self.device)
+            lbl = move_to(inp, self.device)
             # 2: Get network outputs
             outs = self.model(inp)
             # 3: Calculate the loss
@@ -146,8 +147,8 @@ class Trainer():
             # 4: Update loss
             running_loss.add(loss.item())
             # 5: Update metric
-            outs = outs.detach()
-            lbl = lbl.detach()
+            outs = detach(outs)
+            lbl = detach(lbl)
             for m in self.metric.values():
                 value = m.calculate(outs, lbl)
                 m.update(value)
