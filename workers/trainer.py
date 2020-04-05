@@ -139,7 +139,7 @@ class Trainer():
         for i, (inp, lbl) in enumerate(progress_bar):
             # 1: Load inputs and labels
             inp = move_to(inp, self.device)
-            lbl = move_to(inp, self.device)
+            lbl = move_to(lbl, self.device)
             # 2: Get network outputs
             outs = self.model(inp)
             # 3: Calculate the loss
