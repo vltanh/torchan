@@ -1,3 +1,5 @@
+import torch.nn as nn
+
 from .extractor_network import ExtractorNetwork
 from efficientnet_pytorch import EfficientNet
 
@@ -5,9 +7,9 @@ from efficientnet_pytorch import EfficientNet
 class EfficientNetExtractor(ExtractorNetwork):
     def __init__(self, version):
         super().__init__()
-        assert version in [f'b{id}' for id in range(7)]
+        assert version in range(9)
         self.extractor = EfficientNet.from_pretrained(
-            f'efficientnet-{version}')
+            f'efficientnet-b{version}')
         self.feature_dim = self.extractor._fc.in_features
 
     def forward(self, x):
