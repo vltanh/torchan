@@ -16,5 +16,7 @@ dataset:
         <argument keyword>: <argument value>
         # ... more args
     loader:
-        <dataloader argument keyword>: <argument value>
-        # ... more args
+        name: <dataloader class name>
+        args:
+            <dataloader argument keyword>: <argument value>
+            # ... more args

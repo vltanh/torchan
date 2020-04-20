@@ -33,16 +33,20 @@ dataset:
             <argument keyword>: <argument value>
             # ... more args
         loader:
-            <dataloader argument keyword>: <argument value>
-            # ... more args
+            name: <dataloader class name>
+            args:
+                <dataloader argument keyword>: <argument value>
+                # ... more args
     val:
         name: <dataset class name>
         args:
             <argument keyword>: <argument value>
             # ... more args
         loader:
-            <dataloader argument keyword>: <argument value>
-            # ... more args
+            name: <dataloader class name>
+            args:
+                <dataloader argument keyword>: <argument value>
+                # ... more args
 trainer:
     nepochs: <max number of epochs>
     val_step: <validation interval>

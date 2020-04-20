@@ -30,18 +30,19 @@ def train(config):
     pretrained = None
     if (pretrained_path != None):
         pretrained = torch.load(pretrained_path, map_location=dev_id)
-        for item in ["model", "train"]:
+        for item in ["model"]:
             config[item] = pretrained["config"][item]
 
     # 1: Load datasets
     set_seed()
     train_dataset = get_instance(config['dataset']['train'])
-    train_dataloader = torch.utils.data.DataLoader(train_dataset,
-                                                   **config['dataset']['train']['loader'])
+    train_dataloader = get_instance(config['dataset']['train']['loader'],
+                                    dataset=train_dataset)
 
+    set_seed()
     val_dataset = get_instance(config['dataset']['val'])
-    val_dataloader = torch.utils.data.DataLoader(val_dataset,
-                                                 **config['dataset']['val']['loader'])
+    val_dataloader = get_instance(config['dataset']['val']['loader'],
+                                  dataset=val_dataset)
 
     # 2: Define network
     set_seed()
@@ -52,23 +53,28 @@ def train(config):
         model.load_state_dict(pretrained['model_state_dict'])
 
     # 3: Define loss
+    set_seed()
     criterion = get_instance(config['loss']).to(device)
 
     # 4: Define Optimizer
+    set_seed()
     optimizer = get_instance(config['optimizer'],
                              params=model.parameters())
     if pretrained is not None:
         optimizer.load_state_dict(pretrained['optimizer_state_dict'])
 
     # 5: Define Scheduler
+    set_seed()
     scheduler = get_instance(config['scheduler'],
                              optimizer=optimizer)
 
     # 6: Define metrics
+    set_seed()
     metric = {mcfg['name']: get_instance(mcfg)
               for mcfg in config['metric']}
 
     # 6: Create trainer
+    set_seed()
     trainer = Trainer(device=device,
                       config=config,
                       model=model,
