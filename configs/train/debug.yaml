@@ -1,0 +1,40 @@
+id: Test
+pretrained: null
+model:
+    name: SpatialTransformerNet
+    args:
+optimizer:
+    name: SGD
+    args:
+        lr: 0.01
+loss:
+    name: CrossEntropyLoss
+    args:
+metric:
+    - name: Accuracy
+      args:
+scheduler:
+    name: ReduceLROnPlateau
+    args:
+dataset:
+    train:
+        name: MNISTDataset
+        args:
+            train: True
+        loader:
+            name: DataLoader
+            args:
+                batch_size: 64
+                shuffle: True
+    val:
+        name: MNISTDataset
+        args:
+            train: False
+        loader:
+            name: DataLoader
+            args:
+                batch_size: 64
+trainer:
+    nepochs: 50
+    val_step: 1
+    log_step: 1
