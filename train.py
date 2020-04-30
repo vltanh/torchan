@@ -1,7 +1,7 @@
 import yaml
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import random_split
 from torch.utils import data
 from tqdm import tqdm
 from torchnet import meter
@@ -34,15 +34,35 @@ def train(config):
             config[item] = pretrained["config"][item]
 
     # 1: Load datasets
-    set_seed()
-    train_dataset = get_instance(config['dataset']['train'])
-    train_dataloader = get_instance(config['dataset']['train']['loader'],
-                                    dataset=train_dataset)
+    if config['dataset'].get('train', None) is not None and \
+       config['dataset'].get('val', None) is not None:
+        set_seed()
+        train_dataset = get_instance(config['dataset']['train'])
+        train_dataloader = get_instance(config['dataset']['train']['loader'],
+                                        dataset=train_dataset)
 
-    set_seed()
-    val_dataset = get_instance(config['dataset']['val'])
-    val_dataloader = get_instance(config['dataset']['val']['loader'],
-                                  dataset=val_dataset)
+        set_seed()
+        val_dataset = get_instance(config['dataset']['val'])
+        val_dataloader = get_instance(config['dataset']['val']['loader'],
+                                      dataset=val_dataset)
+    elif config['dataset'].get('trainval'):
+        set_seed()
+        dataset_cfg = config['dataset']['trainval']
+        ratio = dataset_cfg['ratio']
+        dataset = get_instance(dataset_cfg)
+        train_sz = int(ratio * len(dataset))
+        val_sz = len(dataset) - train_sz
+        train_dataset, val_dataset = random_split(dataset, [train_sz, val_sz])
+
+        set_seed()
+        train_dataloader = get_instance(config['dataset']['trainval']['train_loader'],
+                                        dataset=train_dataset)
+
+        set_seed()
+        val_dataloader = get_instance(config['dataset']['trainval']['val_loader'],
+                                      dataset=val_dataset)
+    else:
+        raise Exception('Dataset config is not correctly formatted.')
 
     # 2: Define network
     set_seed()
