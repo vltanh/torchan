@@ -6,45 +6,42 @@ import matplotlib.pyplot as plt
 
 from models import SpatialTransformerNet
 from datasets import MNISTDataset
+from utils.getter import get_instance, get_single_data
 
+import argparse
 
-def convert_image_np(inp):
-    """Convert a Tensor to numpy image."""
-    inp = inp.numpy().transpose((1, 2, 0))
-    mean = np.array([0.485, 0.456, 0.406])
-    std = np.array([0.229, 0.224, 0.225])
-    inp = std * inp + mean
-    inp = np.clip(inp, 0, 1)
-    return inp
+parser = argparse.ArgumentParser()
+parser.add_argument('--weight')
+parser.add_argument('--gpus', default=None)
+args = parser.parse_args()
 
+dev_id = 'cuda:{}'.format(args.gpus) \
+    if torch.cuda.is_available() and args.gpus is not None \
+    else 'cpu'
+device = torch.device(dev_id)
 
-model = SpatialTransformerNet().cuda()
-model.load_state_dict(torch.load(
-    'runs/Test-2020_04_30-12_46_31/best_metric_Accuracy.pth')['model_state_dict'])
+config = torch.load(args.weight)
 
-dataset = MNISTDataset(train=False)
-dataloader = DataLoader(dataset, batch_size=64)
+model = get_instance(config['config']['model']).to(device)
+model.load_state_dict(config['model_state_dict'])
+
+dataloader = get_single_data(config['config']['dataset']['val'])
 
 with torch.no_grad():
     for data, _ in dataloader:
-        data = data.cuda()
+        data = data.to(device)
 
         input_tensor = data.cpu()
         transformed_input_tensor = model.stn(data).cpu()
 
-        in_grid = convert_image_np(
-            torchvision.utils.make_grid(input_tensor))
+        in_grid = torchvision.utils.make_grid(input_tensor)
+        out_grid = torchvision.utils.make_grid(transformed_input_tensor)
 
-        out_grid = convert_image_np(
-            torchvision.utils.make_grid(transformed_input_tensor))
-
-        # Plot the results side-by-side
-        f, axarr = plt.subplots(1, 2)
-        axarr[0].imshow(in_grid)
-        axarr[0].set_title('Dataset Images')
-
-        axarr[1].imshow(out_grid)
-        axarr[1].set_title('Transformed Images')
+        fig, axes = plt.subplots(1, 2)
+        axes[0].imshow(in_grid.permute(1, 2, 0))
+        axes[0].set_title('Dataset Images')
+        axes[1].imshow(out_grid.permute(1, 2, 0))
+        axes[1].set_title('Transformed Images')
 
         plt.show()
         plt.close()
