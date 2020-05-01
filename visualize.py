@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from models import SpatialTransformerNet
 from datasets import MNISTDataset
-from utils.getter import get_instance, get_single_data
+from utils.getter import get_instance, get_data
 
 import argparse
 
@@ -25,7 +25,8 @@ config = torch.load(args.weight)
 model = get_instance(config['config']['model']).to(device)
 model.load_state_dict(config['model_state_dict'])
 
-dataloader = get_single_data(config['config']['dataset']['val'])
+_, dataloader = get_data(config['config']['dataset'],
+                         config['config']['seed'])
 
 with torch.no_grad():
     for data, _ in dataloader:
