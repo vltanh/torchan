@@ -1,14 +1,14 @@
 import yaml
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import random_split
 from torch.utils import data
 from tqdm import tqdm
 from torchnet import meter
 
 from workers.trainer import Trainer
-from utils.random_seed import set_seed
-from utils.getter import get_instance
+from utils.random_seed import set_seed, set_determinism
+from utils.getter import get_instance, get_data
 
 import argparse
 import pprint
@@ -19,6 +19,7 @@ def train(config):
 
     pprint.PrettyPrinter(indent=2).pprint(config)
 
+    # Get device
     dev_id = 'cuda:{}'.format(config['gpus']) \
         if torch.cuda.is_available() and config.get('gpus', None) is not None \
         else 'cpu'
@@ -34,18 +35,11 @@ def train(config):
             config[item] = pretrained["config"][item]
 
     # 1: Load datasets
-    set_seed()
-    train_dataset = get_instance(config['dataset']['train'])
-    train_dataloader = get_instance(config['dataset']['train']['loader'],
-                                    dataset=train_dataset)
-
-    set_seed()
-    val_dataset = get_instance(config['dataset']['val'])
-    val_dataloader = get_instance(config['dataset']['val']['loader'],
-                                  dataset=val_dataset)
+    train_dataloader, val_dataloader = \
+        get_data(config['dataset'], config['seed'])
 
     # 2: Define network
-    set_seed()
+    set_seed(config['seed'])
     model = get_instance(config['model']).to(device)
 
     # Train from pretrained if it is not None
@@ -53,28 +47,28 @@ def train(config):
         model.load_state_dict(pretrained['model_state_dict'])
 
     # 3: Define loss
-    set_seed()
+    set_seed(config['seed'])
     criterion = get_instance(config['loss']).to(device)
 
     # 4: Define Optimizer
-    set_seed()
+    set_seed(config['seed'])
     optimizer = get_instance(config['optimizer'],
                              params=model.parameters())
     if pretrained is not None:
         optimizer.load_state_dict(pretrained['optimizer_state_dict'])
 
     # 5: Define Scheduler
-    set_seed()
+    set_seed(config['seed'])
     scheduler = get_instance(config['scheduler'],
                              optimizer=optimizer)
 
     # 6: Define metrics
-    set_seed()
+    set_seed(config['seed'])
     metric = {mcfg['name']: get_instance(mcfg)
               for mcfg in config['metric']}
 
     # 6: Create trainer
-    set_seed()
+    set_seed(config['seed'])
     trainer = Trainer(device=device,
                       config=config,
                       model=model,
@@ -84,7 +78,7 @@ def train(config):
                       metric=metric)
 
     # 7: Start to train
-    set_seed()
+    set_seed(config['seed'])
     trainer.train(train_dataloader=train_dataloader,
                   val_dataloader=val_dataloader)
 
@@ -102,4 +96,5 @@ if __name__ == "__main__":
     config['gpus'] = args.gpus
     config['debug'] = args.debug
 
+    set_determinism()
     train(config)
