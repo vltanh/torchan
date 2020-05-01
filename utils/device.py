@@ -24,7 +24,8 @@ def move_to(obj, device):
     elif isinstance(obj, tuple):
         return tuple(move_to(list(obj), device))
     else:
-        raise TypeError("Invalid type for move_to")
+        # raise Warning(f'Invalid type {type(obj)} for move_to')
+        return obj
 
 
 def detach(obj):
@@ -38,4 +39,5 @@ def detach(obj):
     elif isinstance(obj, tuple):
         return tuple(detach(list(obj)))
     else:
-        raise TypeError("Invalid type for detach")
+        # raise TypeError(f'Invalid type {type(obj)} for detach')
+        return obj

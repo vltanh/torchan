@@ -2,3 +2,5 @@ from .classification.crossentropy import BCEWithLogitsLoss, WeightedBCEWithLogit
 from .classification.focalloss import FocalLoss
 from .segmentation.diceloss import DiceLoss
 from .mixedloss import MixedLoss
+
+from .detection_loss import DetectionLoss
