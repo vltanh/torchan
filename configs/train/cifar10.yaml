@@ -1,0 +1,43 @@
+id: CIFAR10
+pretrained: null
+seed: 3698
+model:
+    name: SpatialTransformerNet
+    args:
+        in_channels: 3
+        feature_dim: 256
+        nclasses: 10
+optimizer:
+    name: SGD
+    args:
+        lr: 0.01
+loss:
+    name: CrossEntropyLoss
+    args:
+metric:
+    - name: Accuracy
+      args:
+scheduler:
+    name: ReduceLROnPlateau
+    args:
+dataset:
+    trainval:
+        name: CIFAR10Dataset
+        args:
+            img_dir: data/CIFAR10/train
+            label_path: data/CIFAR10/trainLabels.csv
+        ratio: 0.8
+        loader:
+            train:
+                name: DataLoader
+                args:
+                    batch_size: 64
+                    shuffle: True
+            val:
+                name: DataLoader
+                args:
+                    batch_size: 64
+trainer:
+    nepochs: 50
+    val_step: 1
+    log_step: 1

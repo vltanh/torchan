@@ -1,8 +1,12 @@
-id: Test
+id: MNIST
 pretrained: null
+seed: 3698
 model:
     name: SpatialTransformerNet
     args:
+        in_channels: 1
+        feature_dim: 16
+        nclasses: 10
 optimizer:
     name: SGD
     args:
@@ -20,7 +24,7 @@ dataset:
     train:
         name: MNISTDataset
         args:
-            train: True
+            path: data/MNIST/mnist_train.csv
         loader:
             name: DataLoader
             args:
@@ -29,7 +33,7 @@ dataset:
     val:
         name: MNISTDataset
         args:
-            train: False
+            path: data/MNIST/mnist_test.csv
         loader:
             name: DataLoader
             args:

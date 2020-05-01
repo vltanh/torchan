@@ -3,39 +3,32 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class SpatialTransformerNet(nn.Module):
-    def __init__(self):
+class SpatialTransformerModule(nn.Module):
+    def __init__(self, in_channels):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, 10)
-
-        # Spatial transformer localization-network
+        # Localisation network
         self.localization = nn.Sequential(
-            nn.Conv2d(1, 8, kernel_size=7),
+            nn.Conv2d(in_channels, 64, kernel_size=7),
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(True),
-            nn.Conv2d(8, 10, kernel_size=5),
+            nn.Conv2d(64, 32, kernel_size=5),
             nn.MaxPool2d(2, stride=2),
             nn.ReLU(True)
         )
 
         # Regressor for the 3 * 2 affine matrix
         self.fc_loc = nn.Sequential(
-            nn.Linear(10 * 3 * 3, 32),
+            nn.Linear(32 * 3 * 3, 32),
             nn.ReLU(True),
             nn.Linear(32, 3 * 2)
         )
 
         # Initialize the weights/bias with identity transformation
         self.fc_loc[2].weight.data.zero_()
-        self.fc_loc[2].bias.data.copy_(torch.tensor(
-            [1, 0, 0, 0, 1, 0], dtype=torch.float))
+        self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 1, 0],
+                                                    dtype=torch.float))
 
-    # Spatial transformer network forward function
-    def stn(self, x):
+    def forward(self, x):
         xs = self.localization(x)
         xs = F.adaptive_avg_pool2d(xs, output_size=(3, 3)).view(xs.size(0), -1)
         theta = self.fc_loc(xs)
@@ -43,18 +36,18 @@ class SpatialTransformerNet(nn.Module):
 
         grid = F.affine_grid(theta, x.size(), align_corners=True)
         x = F.grid_sample(x, grid, align_corners=True)
-
         return x
+
+
+class SpatialTransformerNet(nn.Module):
+    def __init__(self, in_channels, feature_dim, nclasses):
+        super().__init__()
+        self.stn = SpatialTransformerModule(in_channels)
+        self.conv = nn.Conv2d(in_channels, feature_dim, 3)
+        self.fc = nn.Linear(feature_dim, nclasses)
 
     def forward(self, x):
-        # transform the input
         x = self.stn(x)
-
-        # Perform the usual forward pass
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        x = x.view(-1, 320)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
-        return x
+        x = F.relu(F.max_pool2d(self.conv(x), 2))
+        x = F.adaptive_avg_pool2d(x, output_size=(1, 1)).view(x.size(0), -1)
+        return self.fc(x)
