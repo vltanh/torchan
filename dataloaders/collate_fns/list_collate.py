@@ -1,6 +1,6 @@
 def list_collate(batch):
     inputs, targets = map(list, zip(*batch))
-    return (inputs, targets), None
+    return (inputs, targets), targets
 
 
 if __name__ == "__main__":

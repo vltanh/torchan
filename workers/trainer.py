@@ -85,8 +85,8 @@ class Trainer():
         # 0: Record loss during training process
         running_loss = meter.AverageValueMeter()
         total_loss = meter.AverageValueMeter()
-        for m in self.metric.values():
-            m.reset()
+        # for m in self.metric.values():
+        #     m.reset()
         self.model.train()
         print('Training........')
         progress_bar = tqdm(dataloader)
@@ -117,15 +117,15 @@ class Trainer():
                 # 8: Update metric
                 outs = detach(outs)
                 lbl = detach(lbl)
-                for m in self.metric.values():
-                    value = m.calculate(outs, lbl)
-                    m.update(value)
+                # for m in self.metric.values():
+                #     value = m.calculate(outs, lbl)
+                #     m.update(value)
 
         print('+ Training result')
         avg_loss = total_loss.value()[0]
         print('Loss:', avg_loss)
-        for m in self.metric.values():
-            m.summary()
+        # for m in self.metric.values():
+        #     m.summary()
 
     @torch.no_grad()
     def val_epoch(self, epoch, dataloader):

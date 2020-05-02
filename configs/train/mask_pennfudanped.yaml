@@ -14,7 +14,10 @@ optimizer:
 loss:
     name: DetectionLoss
     args:
-metric: {}
+metric:
+    - name: AP
+      args:
+          iou_thr: 0.5
 scheduler:
     name: StepLR
     args:

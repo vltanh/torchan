@@ -61,7 +61,7 @@ def get_data(cfg, seed, with_dataset=False):
         set_seed(seed)
         ratio = trainval_cfg['ratio']
         dataset = get_instance(trainval_cfg)
-        train_sz = int(ratio * len(dataset))
+        train_sz = max(1, int(ratio * len(dataset)))
         val_sz = len(dataset) - train_sz
         train_dataset, val_dataset = random_split(dataset, [train_sz, val_sz])
         # Get dataloader
