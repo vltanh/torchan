@@ -1,5 +1,5 @@
 from torch.optim import SGD, Adam, RMSprop
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, random_split
 
 from losses import *
@@ -11,6 +11,10 @@ from dataloaders import *
 from .random_seed import set_seed
 
 
+def get_function(name):
+    return globals()[name]
+
+
 def get_instance(config, **kwargs):
     assert 'name' in config
     config.setdefault('args', {})
@@ -19,10 +23,20 @@ def get_instance(config, **kwargs):
     return globals()[config['name']](**config['args'], **kwargs)
 
 
+def get_dataloader(cfg, dataset):
+    collate_fn = None
+    if cfg.get('collate_fn', False):
+        collate_fn = get_function(cfg['collate_fn'])
+
+    dataloader = get_instance(cfg,
+                              dataset=dataset,
+                              collate_fn=collate_fn)
+    return dataloader
+
+
 def get_single_data(cfg, with_dataset=True):
     dataset = get_instance(cfg)
-    dataloader = get_instance(cfg['loader'],
-                              dataset=dataset)
+    dataloader = get_dataloader(cfg['loader'], dataset)
     output = dataloader
     if with_dataset:
         output = [output, dataset]
@@ -47,14 +61,14 @@ def get_data(cfg, seed, with_dataset=False):
         set_seed(seed)
         ratio = trainval_cfg['ratio']
         dataset = get_instance(trainval_cfg)
-        train_sz = int(ratio * len(dataset))
+        train_sz = max(1, int(ratio * len(dataset)))
         val_sz = len(dataset) - train_sz
         train_dataset, val_dataset = random_split(dataset, [train_sz, val_sz])
         # Get dataloader
-        train_dataloader = get_instance(trainval_cfg['loader']['train'],
-                                        dataset=train_dataset)
-        val_dataloader = get_instance(trainval_cfg['loader']['val'],
-                                      dataset=val_dataset)
+        train_dataloader = get_dataloader(trainval_cfg['loader']['train'],
+                                          train_dataset)
+        val_dataloader = get_dataloader(trainval_cfg['loader']['val'],
+                                        val_dataset)
     else:
         raise Exception('Dataset config is not correctly formatted.')
 
