@@ -1,6 +1,8 @@
 import numpy as np
 from copy import deepcopy
 
+from torchvision.models.detection.mask_rcnn.
+
 
 def get_model_scores(pred_boxes):
     """Creates a dictionary of from model_scores to image ids.
@@ -183,6 +185,8 @@ def get_avg_precision_at_iou(gt_boxes, pred_bb, iou_thr=0.5):
         for img_id in img_ids:
             gt_boxes_img = gt_boxes[img_id]
             box_scores = pred_boxes_pruned[img_id]['scores']
+            if isinstance(box_scores, float):
+                box_scores = [box_scores]
             start_idx = 0
             for score in box_scores:
                 if score <= model_score_thr:
