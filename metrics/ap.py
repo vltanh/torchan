@@ -168,6 +168,8 @@ def get_avg_precision_at_iou(gt_boxes, pred_bb, iou_thr=0.5):
             np.array(pred_bb[img_id]['scores'])[arg_sort].tolist()
         pred_bb[img_id]['boxes'] = \
             np.array(pred_bb[img_id]['boxes'])[arg_sort].tolist()
+        if not isinstance(pred_bb[img_id]['scores'], list):
+            pred_bb[img_id]['scores'] = [pred_bb[img_id]['scores']]
 
     pred_boxes_pruned = deepcopy(pred_bb)
     precisions = []
