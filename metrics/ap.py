@@ -1,8 +1,6 @@
 import numpy as np
 from copy import deepcopy
 
-from torchvision.models.detection.mask_rcnn.
-
 
 def get_model_scores(pred_boxes):
     """Creates a dictionary of from model_scores to image ids.
