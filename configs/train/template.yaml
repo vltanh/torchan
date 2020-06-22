@@ -1,5 +1,6 @@
 id: <train instance identifier>
 pretrained: <path/to/pretrained>
+seed: <random seed>
 model:
     name: <model class name>
     args:
