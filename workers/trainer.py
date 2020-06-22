@@ -170,6 +170,10 @@ class Trainer():
             print('\nEpoch {:>3d}'.format(epoch))
             print('-----------------------------------')
 
+            # Note learning rate
+            for i, group in enumerate(self.optimizer.param_groups):
+                self.tsboard.update_lr(i, group['lr'], epoch)
+
             # 1: Training phase
             self.train_epoch(epoch=epoch, dataloader=train_dataloader)
 
