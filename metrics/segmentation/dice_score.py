@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from utils.segmentation import multi_class_prediction, binary_prediction
+__all__ = ['DiceScore']
 
 
 class DiceScore():
@@ -10,19 +10,15 @@ class DiceScore():
         assert nclasses > 0
 
         self.nclasses = nclasses
-        self.pred_fn = multi_class_prediction
-        if nclasses == 1:
-            self.nclasses += 1
-            self.pred_fn = binary_prediction
         self.ignore_index = ignore_index
         self.eps = eps
         self.reset()
 
-    def calculate(self, output, target):
+    def update(self, output, target):
         batch_size = output.size(0)
         ious = torch.zeros(self.nclasses, batch_size)
 
-        prediction = self.pred_fn(output)
+        prediction = torch.argmax(output, dim=1)
 
         if self.ignore_index is not None:
             target_mask = (target == self.ignore_index).bool()
@@ -34,11 +30,9 @@ class DiceScore():
         total_count = (prediction.float() + target.float()).sum((-3, -2))
         ious = 2 * (intersection.float() + self.eps) / (total_count + self.eps)
 
-        return ious.cpu()
-
-    def update(self, value):
-        self.mean_class += value.sum(0)
-        self.sample_size += value.size(0)
+        ious = ious.cpu()
+        self.mean_class += ious.sum(0)
+        self.sample_size += ious.size(0)
 
     def value(self):
         return (self.mean_class / self.sample_size).mean()
@@ -49,7 +43,8 @@ class DiceScore():
 
     def summary(self):
         class_iou = self.mean_class / self.sample_size
+        dice_score = class_iou.mean()
 
-        print(f'Dice Score: {self.value():.6f}')
+        print(f'+ Dice Score: {dice_score:.6f}')
         for i, x in enumerate(class_iou):
             print(f'\tClass {i:3d}: {x:.6f}')

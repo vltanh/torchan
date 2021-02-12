@@ -1,6 +1,6 @@
 import torch
 
-from utils.segmentation import multi_class_prediction, binary_prediction
+__all__ = ['PixelAccuracy']
 
 
 class PixelAccuracy():
@@ -9,15 +9,11 @@ class PixelAccuracy():
         assert nclasses > 0
 
         self.nclasses = nclasses
-        self.pred_fn = multi_class_prediction
-        if nclasses == 1:
-            self.nclasses += 1
-            self.pred_fn = binary_prediction
         self.ignore_index = ignore_index
         self.reset()
 
-    def calculate(self, output, target):
-        prediction = self.pred_fn(output)
+    def update(self, output, target):
+        prediction = torch.argmax(output, dim=1)
 
         image_size = target.size(1) * target.size(2)
 
@@ -29,11 +25,10 @@ class PixelAccuracy():
         correct = ((prediction == target) | ignore_mask).sum((1, 2))
         acc = (correct - ignore_size + 1e-6) / \
             (image_size - ignore_size + 1e-6)
-        return acc.cpu()
 
-    def update(self, value):
-        self.total_correct += value.sum(0)
-        self.sample_size += value.size(0)
+        acc = acc.cpu()
+        self.total_correct += acc.sum(0)
+        self.sample_size += acc.size(0)
 
     def value(self):
         return (self.total_correct / self.sample_size).item()
