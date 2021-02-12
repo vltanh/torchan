@@ -1,11 +1,8 @@
-from torch.utils import data
-
-
-class DatasetTemplate(data.Dataset):
+class DatasetTemplate:
     def __init__(self, *args, **kwargs):
         raise NotImplementedError
 
-    def __getitem__(self, index):
+    def __getitem__(self, i):
         raise NotImplementedError
 
     def __len__(self):
