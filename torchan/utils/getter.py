@@ -2,11 +2,11 @@ from torch.optim import SGD, Adam, RMSprop
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, random_split
 
-from losses import *
-from datasets import *
-from models import *
-from metrics import *
-from dataloaders import *
+from ..losses import *
+from ..datasets import *
+from ..models import *
+from ..metrics import *
+from ..dataloaders import *
 
 from .random_seed import set_seed
 

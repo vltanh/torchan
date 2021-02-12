@@ -1,37 +1,25 @@
-import torch
-from torch import nn, optim
-from torch.utils import data
-from tqdm import tqdm
-import numpy as np
 import os
 from datetime import datetime
 
-from loggers import TensorboardLogger
-from utils.device import move_to, detach
-from utils.meter import AverageValueMeter
+import torch
+import numpy as np
+from tqdm import tqdm
 
+from ..utils.random_seed import set_seed
+from ..utils.getter import get_instance
+from ..utils.meter import AverageValueMeter
+from ..utils.device import move_to, detach
+from ..loggers import TensorboardLogger
 
 __all__ = ['SupervisedTrainer']
 
 
 class SupervisedTrainer:
-    def __init__(self,
-                 device,
-                 config,
-                 model,
-                 criterion,
-                 optimier,
-                 scheduler,
-                 metric):
+    def __init__(self, config):
         super().__init__()
 
+        self.load_config_dict(config)
         self.config = config
-        self.device = device
-        self.model = model
-        self.criterion = criterion
-        self.optimizer = optimier
-        self.scheduler = scheduler
-        self.metric = metric
 
         # Train ID
         self.train_id = self.config.get('id', 'None')
@@ -53,6 +41,51 @@ class SupervisedTrainer:
         self.save_dir = os.path.join(self.config['trainer']['log_dir'],
                                      self.train_id)
         self.tsboard = TensorboardLogger(path=self.save_dir)
+
+    def load_config_dict(self, config):
+        # Get device
+        dev_id = 'cuda:{}'.format(config['gpus']) \
+            if torch.cuda.is_available() and config.get('gpus', None) is not None \
+            else 'cpu'
+        self.device = torch.device(dev_id)
+
+        # Get pretrained model
+        pretrained_path = config["pretrained"]
+
+        pretrained = None
+        if (pretrained_path != None):
+            pretrained = torch.load(pretrained_path, map_location=dev_id)
+            for item in ["model"]:
+                config[item] = pretrained["config"][item]
+
+        # 2: Define network
+        set_seed(config['seed'])
+        self.model = get_instance(config['model']).to(self.device)
+
+        # Train from pretrained if it is not None
+        if pretrained is not None:
+            self.model.load_state_dict(pretrained['model_state_dict'])
+
+        # 3: Define loss
+        set_seed(config['seed'])
+        self.criterion = get_instance(config['loss']).to(self.device)
+
+        # 4: Define Optimizer
+        set_seed(config['seed'])
+        self.optimizer = get_instance(config['optimizer'],
+                                      params=self.model.parameters())
+        if pretrained is not None:
+            self.optimizer.load_state_dict(pretrained['optimizer_state_dict'])
+
+        # 5: Define Scheduler
+        set_seed(config['seed'])
+        self.scheduler = get_instance(config['scheduler'],
+                                      optimizer=self.optimizer)
+
+        # 6: Define metrics
+        set_seed(config['seed'])
+        self.metric = {mcfg['name']: get_instance(mcfg)
+                       for mcfg in config['metric']}
 
     def save_checkpoint(self, epoch, val_loss, val_metric):
 
@@ -169,6 +202,8 @@ class SupervisedTrainer:
             self.tsboard.update_metric('val', k, m, epoch)
 
     def train(self, train_dataloader, val_dataloader):
+        set_seed(self.config['seed'])
+
         for epoch in range(self.nepochs):
             print('\nEpoch {:>3d}'.format(epoch))
             print('-----------------------------------')

@@ -2,11 +2,10 @@ import pprint
 import argparse
 
 import yaml
-import torch
 
-from utils.random_seed import set_determinism, set_seed
-from utils.getter import get_data, get_instance
-from trainers import *
+from torchan.utils.random_seed import set_determinism
+from torchan.utils.getter import get_data
+from torchan.trainers import SupervisedTrainer
 
 
 def train(config):
@@ -14,66 +13,14 @@ def train(config):
 
     pprint.PrettyPrinter(indent=2).pprint(config)
 
-    # Get device
-    dev_id = 'cuda:{}'.format(config['gpus']) \
-        if torch.cuda.is_available() and config.get('gpus', None) is not None \
-        else 'cpu'
-    device = torch.device(dev_id)
-
-    # Get pretrained model
-    pretrained_path = config["pretrained"]
-
-    pretrained = None
-    if (pretrained_path != None):
-        pretrained = torch.load(pretrained_path, map_location=dev_id)
-        for item in ["model"]:
-            config[item] = pretrained["config"][item]
-
     # 1: Load datasets
     train_dataloader, val_dataloader = \
         get_data(config['dataset'], config['seed'])
 
-    # 2: Define network
-    set_seed(config['seed'])
-    model = get_instance(config['model']).to(device)
+    # 2: Create trainer
+    trainer = SupervisedTrainer(config=config)
 
-    # Train from pretrained if it is not None
-    if pretrained is not None:
-        model.load_state_dict(pretrained['model_state_dict'])
-
-    # 3: Define loss
-    set_seed(config['seed'])
-    criterion = get_instance(config['loss']).to(device)
-
-    # 4: Define Optimizer
-    set_seed(config['seed'])
-    optimizer = get_instance(config['optimizer'],
-                             params=model.parameters())
-    if pretrained is not None:
-        optimizer.load_state_dict(pretrained['optimizer_state_dict'])
-
-    # 5: Define Scheduler
-    set_seed(config['seed'])
-    scheduler = get_instance(config['scheduler'],
-                             optimizer=optimizer)
-
-    # 6: Define metrics
-    set_seed(config['seed'])
-    metric = {mcfg['name']: get_instance(mcfg)
-              for mcfg in config['metric']}
-
-    # 6: Create trainer
-    set_seed(config['seed'])
-    trainer = SupervisedTrainer(device=device,
-                                config=config,
-                                model=model,
-                                criterion=criterion,
-                                optimier=optimizer,
-                                scheduler=scheduler,
-                                metric=metric)
-
-    # 7: Start to train
-    set_seed(config['seed'])
+    # 3: Start trainining
     trainer.train(train_dataloader=train_dataloader,
                   val_dataloader=val_dataloader)
 

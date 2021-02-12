@@ -2,7 +2,7 @@ from typing import NewType
 import torch.nn as nn
 from torch.nn import functional as F
 
-from utils import getter
+from ....utils import getter
 from ..extractor import Extractor
 
 

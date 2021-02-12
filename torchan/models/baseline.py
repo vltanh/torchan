@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils import getter
+from ..utils import getter
 
 __all__ = ['BaseClassifier']
 
