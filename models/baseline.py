@@ -1,11 +1,12 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from utils import getter
 
+__all__ = ['BaseClassifier']
 
-class BaselineClassifier(nn.Module):
+
+class BaseClassifier(nn.Module):
     def __init__(self, extractor_cfg, nclasses):
         super().__init__()
         self.nclasses = nclasses
@@ -14,5 +15,5 @@ class BaselineClassifier(nn.Module):
         self.classifier = nn.Linear(self.feature_dim, self.nclasses)
 
     def forward(self, x):
-        x = self.extractor(x)
+        x = self.extractor.get_embedding(x)
         return self.classifier(x)
