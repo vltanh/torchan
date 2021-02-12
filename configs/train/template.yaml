@@ -52,3 +52,4 @@ trainer:
     nepochs: <max number of epochs>
     val_step: <validation interval>
     log_step: <training log interval>
+    log_dir: <path to log directory>

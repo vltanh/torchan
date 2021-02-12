@@ -1,17 +1,12 @@
+import pprint
+import argparse
+
 import yaml
 import torch
-import torch.nn as nn
-from torch.utils.data import random_split
-from torch.utils import data
-from tqdm import tqdm
-from torchnet import meter
 
-from workers.trainer import Trainer
-from utils.random_seed import set_seed, set_determinism
-from utils.getter import get_instance, get_data
-
-import argparse
-import pprint
+from utils.random_seed import set_determinism, set_seed
+from utils.getter import get_data, get_instance
+from trainers import *
 
 
 def train(config):
@@ -69,13 +64,13 @@ def train(config):
 
     # 6: Create trainer
     set_seed(config['seed'])
-    trainer = Trainer(device=device,
-                      config=config,
-                      model=model,
-                      criterion=criterion,
-                      optimier=optimizer,
-                      scheduler=scheduler,
-                      metric=metric)
+    trainer = SupervisedTrainer(device=device,
+                                config=config,
+                                model=model,
+                                criterion=criterion,
+                                optimier=optimizer,
+                                scheduler=scheduler,
+                                metric=metric)
 
     # 7: Start to train
     set_seed(config['seed'])

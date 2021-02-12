@@ -1,7 +1,6 @@
 import torch
 from torch import nn, optim
 from torch.utils import data
-from torchnet import meter
 from tqdm import tqdm
 import numpy as np
 import os
@@ -9,17 +8,22 @@ from datetime import datetime
 
 from loggers import TensorboardLogger
 from utils.device import move_to, detach
+from utils.meter import AverageValueMeter
 
 
-class Trainer():
-    def __init__(self, device,
+__all__ = ['SupervisedTrainer']
+
+
+class SupervisedTrainer:
+    def __init__(self,
+                 device,
                  config,
                  model,
                  criterion,
                  optimier,
                  scheduler,
                  metric):
-        super(Trainer, self).__init__()
+        super().__init__()
 
         self.config = config
         self.device = device
@@ -46,7 +50,8 @@ class Trainer():
         self.val_metric = {k: list() for k in self.metric.keys()}
 
         # Instantiate loggers
-        self.save_dir = os.path.join('runs', self.train_id)
+        self.save_dir = os.path.join(self.config['trainer']['log_dir'],
+                                     self.train_id)
         self.tsboard = TensorboardLogger(path=self.save_dir)
 
     def save_checkpoint(self, epoch, val_loss, val_metric):
@@ -83,8 +88,8 @@ class Trainer():
 
     def train_epoch(self, epoch, dataloader):
         # 0: Record loss during training process
-        running_loss = meter.AverageValueMeter()
-        total_loss = meter.AverageValueMeter()
+        running_loss = AverageValueMeter()
+        total_loss = AverageValueMeter()
         for m in self.metric.values():
             m.reset()
         self.model.train()
@@ -118,8 +123,7 @@ class Trainer():
                 outs = detach(outs)
                 lbl = detach(lbl)
                 for m in self.metric.values():
-                    value = m.calculate(outs, lbl)
-                    m.update(value)
+                    m.update(outs, lbl)
 
         print('+ Training result')
         avg_loss = total_loss.value()[0]
@@ -129,7 +133,7 @@ class Trainer():
 
     @torch.no_grad()
     def val_epoch(self, epoch, dataloader):
-        running_loss = meter.AverageValueMeter()
+        running_loss = AverageValueMeter()
         for m in self.metric.values():
             m.reset()
 
@@ -150,8 +154,7 @@ class Trainer():
             outs = detach(outs)
             lbl = detach(lbl)
             for m in self.metric.values():
-                value = m.calculate(outs, lbl)
-                m.update(value)
+                m.update(outs, lbl)
 
         print('+ Evaluation result')
         avg_loss = running_loss.value()[0]

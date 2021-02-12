@@ -1,0 +1,54 @@
+id: sample
+pretrained: null
+seed: 3698
+model:
+    name: BaseClassifier
+    args:
+        extractor_cfg: 
+            name: ResNetExtractor
+            args:
+                version: resnet18
+        nclasses: 10
+optimizer:
+    name: Adam
+    args:
+loss:
+    name: CrossEntropyLoss
+    args:
+metric:
+    - name: Accuracy
+      args:
+scheduler:
+    name: ReduceLROnPlateau
+    args:
+        mode: min
+        factor: 0.5
+        patience: 5
+        verbose: True
+dataset:
+    train:
+        name: MNISTDataset
+        args:
+            csv_path: data/MNIST/mnist_test.csv
+            is_rgb: True
+        loader:
+            name: DataLoader
+            args:
+                batch_size: 16
+                shuffle: True
+                pin_memory: True
+    val:
+        name: MNISTDataset
+        args:
+            csv_path: data/MNIST/mnist_test.csv
+            is_rgb: True
+        loader:
+            name: DataLoader
+            args:
+                batch_size: 16
+                pin_memory: True
+trainer:
+    nepochs: 500
+    val_step: 1
+    log_step: 1
+    log_dir: runs
