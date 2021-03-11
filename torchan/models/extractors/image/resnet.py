@@ -13,13 +13,13 @@ class ResNetExtractor(ImageExtractor):
         'resnet152': models.resnet152,
     }
 
-    def __init__(self, version, use_pretrained=False, is_frozen=False):
+    def __init__(self, version, use_pretrained=False, is_frozen=False, drop=0):
         super().__init__()
         assert version in ResNetExtractor.arch, \
             f'Invalid version [{version}].'
         cnn = ResNetExtractor.arch[version](pretrained=use_pretrained)
-        self.extractor = nn.Sequential(*list(cnn.children())[:-2])
-        self.feature_dim = cnn.fc.in_features
+        self.extractor = nn.Sequential(*list(cnn.children())[:-2-drop])
+        self.feature_dim = cnn.fc.in_features // 2 ** drop
         if is_frozen:
             self.freeze()
 

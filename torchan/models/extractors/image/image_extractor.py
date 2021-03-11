@@ -1,14 +1,17 @@
-from typing import NewType
-import torch.nn as nn
 from torch.nn import functional as F
 
-from ....utils import getter
-from ..extractor import Extractor
+from torchan.utils import getter
+from torchan.models.extractors.extractor import Extractor
+
+__all__ = ['ImageMaskExtractor']
 
 
 class ImageExtractor(Extractor):
     def get_feature_map(self, x):
         raise NotImplementedError
+
+    def forward(self, x):
+        return self.get_embedding(x)
 
     def get_embedding(self, x):
         x = self.get_feature_map(x)
@@ -17,7 +20,7 @@ class ImageExtractor(Extractor):
         return x
 
 
-class ImageMaskExtractor(Extractor):
+class ImageMaskExtractor(ImageExtractor):
     def __init__(self, ext_cfg):
         super().__init__()
         self.ext = getter.get_instance(ext_cfg)
@@ -48,13 +51,17 @@ class ImageMaskExtractor(Extractor):
 
         # Get feature map
         x = self.get_feature_map(x)  # B, D, H', W'
+        nh, nw = x.shape[-2:]
+        mask = F.interpolate(mask.unsqueeze(1).float(), size=x.shape[-2:],
+                             mode='bilinear', align_corners=True)  # B, 1, H', W'
 
         # Take the verage vector
         x = F.adaptive_avg_pool2d(x, (1, 1))  # B, D, 1, 1
         x = x.view(x.size(0), -1)  # B, D
 
         # Normalize
-        fg_area = mask.sum((-1, -2))  # B
+        x *= nh * nw
+        fg_area = mask.sum((-1, -2))  # B, 1
         x /= fg_area  # B, D
 
         return x

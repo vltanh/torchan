@@ -23,4 +23,4 @@ class Accuracy():
         return self.correct / self.sample_size
 
     def summary(self):
-        print(f'Accuracy: {self.value()}')
+        print(f'+ Accuracy: {self.value()}')

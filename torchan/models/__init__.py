@@ -1,2 +1,2 @@
 from .extractors import *
-from .baseline import *
+from .classifier import *
