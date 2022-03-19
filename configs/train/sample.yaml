@@ -29,12 +29,12 @@ dataset:
     train:
         name: MNISTDataset
         args:
-            csv_path: data/MNIST/mnist_test.csv
+            csv_path: data/MNIST/mnist_train.csv
             is_rgb: True
         loader:
             name: DataLoader
             args:
-                batch_size: 16
+                batch_size: 1024
                 shuffle: True
                 pin_memory: True
     val:
@@ -45,10 +45,10 @@ dataset:
         loader:
             name: DataLoader
             args:
-                batch_size: 16
+                batch_size: 1024
                 pin_memory: True
 trainer:
-    nepochs: 500
+    nepochs: 5
     val_step: 1
     log_step: 1
     log_dir: runs

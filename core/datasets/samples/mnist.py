@@ -1,6 +1,6 @@
 import torch
 import pandas as pd
-
+"""You can download it from https://github.com/pjreddie/mnist-csv-png or run the scripts in data_generator/mnist-csv-png"""
 __all__ = ['MNISTDataset']
 
 

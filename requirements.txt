@@ -2,3 +2,9 @@ torch
 torchvision 
 pandas 
 pyyaml
+efficientnet_pytorch
+scikit-learn
+seaborn
+tqdm
+rich 
+tensorboard
