@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from torchan.utils import getter
+from core.utils import getter
 
 __all__ = ['BaseClassifier', 'MultiClassifier']
 

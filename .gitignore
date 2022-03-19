@@ -130,3 +130,5 @@ dmypy.json
 data/
 runs/
 *.pth
+
+env_*
