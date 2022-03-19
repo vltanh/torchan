@@ -1,5 +1,6 @@
 # Torchism 
 General template for my PyTorch projects.
+I will add more examples other than supervised mnist in the future.
 
 ## Dependency 
 ```
